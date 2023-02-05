@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 app = Flask(__name__)
 
-DATAFILES = Path("/Datafiles")
+DATAFILES = Path("../Datafiles")
 
 ATenKB = DATAFILES.joinpath("A_10kB")
 AHundredKB = DATAFILES.joinpath("A_100kB")

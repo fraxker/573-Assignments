@@ -4,7 +4,7 @@ from pathlib import Path
 import time
 import sys
 
-DATAFILES = Path("/Datafiles")
+DATAFILES = Path("../Datafiles")
 
 ATenKB = DATAFILES.joinpath("A_10kB")
 AHundredKB = DATAFILES.joinpath("A_100kB")
@@ -20,7 +20,7 @@ def downlink(send_file: Path, receive_file: Path, repeat_send: int, repeat_recei
     send_sizes = []
     for _ in range(repeat_send):
         start_time = time.time()
-        r = requests.get("http://server:5000/send", files={"upload_file": send_file.open("rb")})
+        r = requests.get("http://localhost:5000/send", files={"upload_file": send_file.open("rb")})
         send_sizes.append(r.json()["size"])
         send_times.append(time.time() - start_time)
 
@@ -28,7 +28,7 @@ def downlink(send_file: Path, receive_file: Path, repeat_send: int, repeat_recei
     receive_sizes = []
     for _ in range(repeat_receive):
         start_time = time.time()
-        r = requests.get("http://server:5000/receive", json={"name": receive_file.name})
+        r = requests.get("http://localhost:5000/receive", json={"name": receive_file.name})
         receive_sizes.append(len(r.content) + sys.getsizeof(r.headers))
         receive_times.append(time.time() - start_time)
 
