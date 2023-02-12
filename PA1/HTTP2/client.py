@@ -1,8 +1,10 @@
 from statistics import mean, stdev
-import httpx
+import pycurl
 from pathlib import Path
 import time
-import sys
+import json
+from io import BytesIO
+from urllib.parse import urlencode
 
 DATAFILES = Path("../Datafiles")
 
@@ -18,20 +20,35 @@ BTenMB = DATAFILES.joinpath("B_10MB")
 def downlink(send_file: Path, receive_file: Path, repeat_send: int, repeat_receive: int, send_size: int, receive_size: int):
     send_times = []
     send_sizes = []
-    client = httpx.Client(http2=True, )
+    c = pycurl.Curl()
+    c.setopt(pycurl.HTTP_VERSION, pycurl.CURL_HTTP_VERSION_2_0)
+    c.setopt(pycurl.URL, "https://192.168.1.44:8000/send")
     for _ in range(repeat_send):
-        start_time = time.time()
-        r = client.put("https://10.137.14.156:5000/send", files={"upload_file": send_file.open("rb")})
-        send_sizes.append(r.json()["size"])
-        send_times.append(time.time() - start_time)
+        with send_file.open("rb") as f:
+            buffer = BytesIO()
+            c.setopt(pycurl.WRITEDATA, buffer)
+            c.setopt(pycurl.READDATA, f)
+            start_time = time.time()
+            c.perform()
+            send_times.append(time.time() - start_time)
+            d = json.loads(buffer.getvalue())
+            send_sizes.append(d["size"])
 
     receive_times = []
     receive_sizes = []
+    c.setopt(pycurl.URL, 'http://192.168.1.44:8000/receive')
+    c.setopt(pycurl.POSTFIELDS, urlencode())
+    c.setopt(pycurl.CUSTOMREQUEST, "GET")
+    c.setopt(pycurl.HTTPHEADER, ['Accept: application/json', 'Content-Type: application/json'])
     for _ in range(repeat_receive):
+        buffer = BytesIO()
+        headers = BytesIO()
+        c.setopt(pycurl.WRITEDATA, buffer)
+        c.setopt(pycurl.WRITEHEADER, headers)
         start_time = time.time()
-        r = httpx.get("http://10.137.14.156:5000/receive", json={"name": receive_file.name})
-        receive_sizes.append(len(r.content) + sys.getsizeof(r.headers))
+        c.perform()
         receive_times.append(time.time() - start_time)
+        receive_sizes.append(buffer.getbuffer().nbytes + headers.getbuffer().nbytes)
 
     print(send_file.name, "Throughput Mean in kilobits:", ((send_size * 0.008 / mean(send_times)) + (receive_size * 0.008 / mean(receive_times))) / 2)
     print(send_file.name, "Throughput STD in kilobits:", ((send_size * 0.008 / stdev(send_times)) + (receive_size * 0.008 / stdev(receive_times))) / 2)
