@@ -10,40 +10,38 @@ ATenKB = DATAFILES.joinpath("A_10kB")
 AHundredKB = DATAFILES.joinpath("A_100kB")
 AOneMB = DATAFILES.joinpath("A_1MB")
 ATenMB = DATAFILES.joinpath("A_10MB")
-BOneKB = DATAFILES.joinpath("B_1kB")
 BTenKB = DATAFILES.joinpath("B_10kB")
+BHundredKB = DATAFILES.joinpath("B_100kB")
 BOneMB = DATAFILES.joinpath("B_1MB")
 BTenMB = DATAFILES.joinpath("B_10MB")
 
 def downlink(send_file: Path, receive_file: Path, repeat_send: int, repeat_receive: int, send_size: int, receive_size: int):
-    send_times = []
-    send_sizes = []
+    times = []
+    sizes = []
+    session = requests.session()
     for _ in range(repeat_send):
         start_time = time.time()
-        r = requests.get("http://localhost:5000/send", files={"upload_file": send_file.open("rb")})
-        send_sizes.append(r.json()["size"])
-        send_times.append(time.time() - start_time)
-
-    receive_times = []
-    receive_sizes = []
+        r = session.put("http://192.168.1.44:5000/send", files={"upload_file": send_file.open("rb")}, stream=False)
+        sizes.append(r.json()["size"])
+        times.append(time.time() - start_time)
     for _ in range(repeat_receive):
         start_time = time.time()
-        r = requests.get("http://localhost:5000/receive", json={"name": receive_file.name})
-        receive_sizes.append(len(r.content) + sys.getsizeof(r.headers))
-        receive_times.append(time.time() - start_time)
+        r = session.get("http://192.168.1.44:5000/receive", json={"name": receive_file.name}, stream=False)
+        sizes.append(len(r.content) + sys.getsizeof(r.headers))
+        times.append(time.time() - start_time)
 
-    print(send_file.name, "Throughput Mean in kilobits:", ((send_size * 0.008 / mean(send_times)) + (receive_size * 0.008 / mean(receive_times))) / 2)
-    print(send_file.name, "Throughput STD in kilobits:", ((send_size * 0.008 / stdev(send_times)) + (receive_size * 0.008 / stdev(receive_times))) / 2)
-    print(send_file.name, "Packet Size Mean in kilobits:", ((mean(send_sizes) / send_size) + (mean(receive_sizes) / receive_size)) / 2 * 0.008)
+    print(send_file.name, "Throughput Mean in kilobits:", (send_size * 0.008 / mean(times)))
+    print(send_file.name, "Throughput STD in kilobits:", (send_size * 0.008 / stdev(times)))
+    print(send_file.name, "Packet Size Mean in kilobits:", (mean(sizes) / send_size) * 0.008)
 
 if __name__ == "__main__":
     # Downlink 10kB file
     print("Downlinking 10KB file")
-    downlink(ATenKB, BOneKB, 1000, 10000, 10000, 1000)
+    downlink(ATenKB, BTenKB, 1000, 10000, 10000, 1000)
 
     # Downlink 100kB file
     print("Downlinking 100KB file")
-    downlink(AHundredKB, BTenKB, 100, 10, 100000, 1000)
+    downlink(AHundredKB, BHundredKB, 100, 10, 100000, 1000)
 
     # Downlink 1MB file
     print("Downlinking 1MB file")

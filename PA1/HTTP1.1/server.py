@@ -9,8 +9,8 @@ ATenKB = DATAFILES.joinpath("A_10kB")
 AHundredKB = DATAFILES.joinpath("A_100kB")
 AOneMB = DATAFILES.joinpath("A_1MB")
 ATenMB = DATAFILES.joinpath("A_10MB")
-BOneKB = DATAFILES.joinpath("B_1kB")
 BTenKB = DATAFILES.joinpath("B_10kB")
+BHundredKB = DATAFILES.joinpath("B_100kB")
 BOneMB = DATAFILES.joinpath("B_1MB")
 BTenMB = DATAFILES.joinpath("B_10MB")
 
@@ -18,18 +18,19 @@ BTenMB = DATAFILES.joinpath("B_10MB")
 def receive():
     json_data = request.json
     name = json_data["name"]
-    match name:
-        case BOneKB.name:
-            file = BOneKB
-        case BTenKB.name:
-            file = BTenKB
-        case BOneMB.name:
-            file = BOneMB
-        case BTenMB.name:
-            file = BTenMB
-    return send_from_directory(str(DATAFILES), file.name, as_attachment=True)
+    if name == BTenKB.name:
+        file = BTenKB
+    if name == BHundredKB.name:
+        file = BHundredKB
+    if name == BOneMB.name:
+        file = BOneMB
+    if name == BTenMB.name:
+        file = BTenMB
 
-@app.route('/send', methods=['GET'])
+    return send_from_directory(str(DATAFILES.resolve()), file.name, as_attachment=True)
+
+@app.route('/send', methods=['PUT'])
 def send():
+    request.files["upload_file"]
     size = request.content_length + sys.getsizeof(request.headers)
     return {"size": size}
