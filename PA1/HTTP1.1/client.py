@@ -32,7 +32,7 @@ def downlink(send_file: Path, receive_file: Path, repeat_send: int, repeat_recei
 
     print(send_file.name, "Throughput Mean in kilobits:", (send_size * 0.008 / mean(times)))
     print(send_file.name, "Throughput STD in kilobits:", (send_size * 0.008 / stdev(times)))
-    print(send_file.name, "Packet Size Mean in kilobits:", (mean(sizes) / send_size) * 0.008)
+    print(send_file.name, "Packet Size Mean in kilobits:", mean(sizes) * 0.008)
 
 if __name__ == "__main__":
     # Downlink 10kB file

@@ -27,7 +27,7 @@ def receive():
     if name == BTenMB.name:
         file = BTenMB
 
-    return send_from_directory(str(DATAFILES.resolve()), file.name, as_attachment=True)
+    return send_from_directory(str(DATAFILES.resolve()), file.name)
 
 @app.route('/send', methods=['PUT'])
 def send():
