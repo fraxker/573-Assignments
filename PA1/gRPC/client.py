@@ -26,29 +26,34 @@ BTenMB = DATAFILES.joinpath("B_10MB")
 def downlink(stub, send_file: Path, receive_file: Path, repeat_send: int, repeat_receive: int, send_size: int):
     times = []
     sizes = []
-    for _ in range(repeat_send):
-       start_time = time.time()
+    for i in range(repeat_send):
+        start_time = time.time()
        
-       with send_file.open('rb') as f:
-           data = f.read()
-       r = stub.UploadFile(proto_pb2.FileMessage(chunk_data = data)) 
-       times.append(time.time() - start_time)
-       sizes.append(int(r.message))
-    for _ in range(repeat_receive):
-       start_time = time.time()
-       r = stub.DownloadFile(proto_pb2.StringResponse(message = receive_file.name)) 
-       times.append(time.time() - start_time)
-       sizes.append(len(r.chunk_data))
+        with send_file.open('rb') as f:
+            data = f.read()
+        r = stub.UploadFile(proto_pb2.FileMessage(chunk_data = data)) 
+        times.append(time.time() - start_time)
+        sizes.append(int(r.message))
+        if i % 100 == 0:
+            print(f"Send: {i}")
+
+    for i in range(repeat_receive):
+        start_time = time.time()
+        r = stub.DownloadFile(proto_pb2.StringResponse(message = receive_file.name)) 
+        times.append(time.time() - start_time)
+        sizes.append(len(r.chunk_data))
+        if i % 100 == 0:
+            print(f"Receive: {i}")
        
 
     print(send_file.name, "Throughput Mean in kilobits:", (send_size * 0.008 / mean(times)))
     print(send_file.name, "Throughput STD in kilobits:", (send_size * 0.008 / stdev(times)))
-    print(send_file.name, "Packet Size Mean in kilobits:", (mean(sizes) / send_size) * 0.008)
+    print(send_file.name, "Packet Size Mean in kilobits:", mean(sizes) * 0.008)
 
     
     
 def run():
-    with grpc.insecure_channel( 'localhost:50051', options=[ ('grpc.max_send_message_length', -1), ('grpc.max_receive_message_length', -1)],) as channel:
+    with grpc.insecure_channel( '192.168.1.19:50051', options=[ ('grpc.max_send_message_length', -1), ('grpc.max_receive_message_length', -1)],) as channel:
         stub = proto_pb2_grpc.GreeterStub(channel)
         # Downlink 10kB file
         print("Downlinking 10KB file")

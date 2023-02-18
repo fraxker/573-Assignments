@@ -21,12 +21,12 @@ def downlink(send_file: Path, receive_file: Path, repeat_send: int, repeat_recei
     session = requests.session()
     for _ in range(repeat_send):
         start_time = time.time()
-        r = session.put("http://192.168.1.44:5000/send", files={"upload_file": send_file.open("rb")}, stream=False)
+        r = session.put("http://192.168.1.19:5000/send", files={"upload_file": send_file.open("rb")}, stream=False)
         sizes.append(r.json()["size"])
         times.append(time.time() - start_time)
     for _ in range(repeat_receive):
         start_time = time.time()
-        r = session.get("http://192.168.1.44:5000/receive", json={"name": receive_file.name}, stream=False)
+        r = session.get("http://192.168.1.19:5000/receive", json={"name": receive_file.name}, stream=False)
         sizes.append(len(r.content) + sys.getsizeof(r.headers))
         times.append(time.time() - start_time)
 

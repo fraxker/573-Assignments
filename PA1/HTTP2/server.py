@@ -32,7 +32,7 @@ async def receive():
 @app.route('/send', methods=['PUT'])
 async def send():
     size = request.content_length + sys.getsizeof(request.headers)
-    return {"size": size}
+    return size
 
 if __name__ == "__main__":
     app.run(host="192.168.1.44", port=8000, certfile="./cert.pem")
