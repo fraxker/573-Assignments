@@ -26,8 +26,8 @@ if __name__ == "__main__":
         for a in alerts:
             if a.category() & lt.alert.category_t.error_notification:
                 print(a)
-                ses = lt.session({'listen_interfaces': '0.0.0.0:6881'})
-                h = ses.add_torrent({'ti': lt.torrent_info('../A_10kB.torrent'), 'save_path': "."})
-                h = ses.add_torrent({'ti': lt.torrent_info('../A_100kB.torrent'), 'save_path': "."})
-                h = ses.add_torrent({'ti': lt.torrent_info('../A_1MB.torrent'), 'save_path': "."})
-                h = ses.add_torrent({'ti': lt.torrent_info('../A_10MB.torrent'), 'save_path': "."})
+                # ses = lt.session({'listen_interfaces': '0.0.0.0:6881'})
+                # h = ses.add_torrent({'ti': lt.torrent_info('../A_10kB.torrent'), 'save_path': "."})
+                # h = ses.add_torrent({'ti': lt.torrent_info('../A_100kB.torrent'), 'save_path': "."})
+                # h = ses.add_torrent({'ti': lt.torrent_info('../A_1MB.torrent'), 'save_path': "."})
+                # h = ses.add_torrent({'ti': lt.torrent_info('../A_10MB.torrent'), 'save_path': "."})
