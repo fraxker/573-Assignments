@@ -19,9 +19,9 @@ def downlink(send_file: Path, repeat_send: int, send_size: int):
         torrent.start_download()
         times.append(time.time() - start_time)
         sizes.append(send_file.stat().st_size)
-        ATenKB.unlink()
-        time.sleep(.1)
-
+        send_file.unlink()
+        time.sleep(1)
+  
     print(send_file.name, "Throughput Mean in kilobits:", (send_size * 0.008 / mean(times)))
     print(send_file.name, "Throughput STD in kilobits:", (send_size * 0.008 / stdev(times)))
     print(send_file.name, "Packet Size Mean in kilobits:", mean(sizes) * 0.008)
