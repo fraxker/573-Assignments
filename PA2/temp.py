@@ -2,9 +2,7 @@ from ns import ns
 from cppyy import addressof, bind_object
 
 if __name__ == "__main__":
-    """
-    Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::" + tcpTypeId));
-    """
+    ns.core.Config.SetDefault("ns3::TcpL4Protocol::SocketType", ns.core.TypeIdValue(ns.network.TcpCubic.GetTypeId()))
     # Sender Nodes
     sNodes = ns.network.NodeContainer()
     sNodes.Create(2)
@@ -46,29 +44,30 @@ if __name__ == "__main__":
 
     # Sender 1
     s1bsh = ns.network.BulkSendHelper("ns3::TcpSocketFactory", ns.network.InetSocketAddress(ips1r1.GetAddress(0), 5000).ConvertTo())
-    s1bsh.SetAttribute("MaxBytes", ns.core.UintegerValue(0))
+    s1bsh.SetAttribute("MaxBytes", ns.core.UintegerValue(1000))
     s1sa = s1bsh.Install(sNodes.Get(0))
     s1sa.Start(ns.core.Seconds(0.0))
     s1sa.Stop(ns.core.Seconds(10.0))
 
-    # Sender 2
-    s2bsh = ns.network.BulkSendHelper("ns3::TcpSocketFactory", ns.network.InetSocketAddress(ips2r1.GetAddress(0), 5000).ConvertTo())
-    s2bsh.SetAttribute("MaxBytes", ns.core.UintegerValue(0))
-    s2sa = s2bsh.Install(sNodes.Get(1))
-    s2sa.Start(ns.core.Seconds(0.0))
-    s2sa.Stop(ns.core.Seconds(10.0))
+    # # Sender 2
+    # s2bsh = ns.network.BulkSendHelper("ns3::TcpSocketFactory", ns.network.InetSocketAddress(ips2r1.GetAddress(0), 5001).ConvertTo())
+    # s2bsh.SetAttribute("MaxBytes", ns.core.UintegerValue(1))
+    # s2sa = s2bsh.Install(sNodes.Get(1))
+    # s2sa.Start(ns.core.Seconds(0.0))
+    # s2sa.Stop(ns.core.Seconds(10.0))
 
     # Destination 1
-    d1psh = ns.network.PacketSinkHelper("ns3::TcpSocketFactory", ns.network.InetSocketAddress(ips1r1.GetAddress(0), 5000).ConvertTo())
+    d1psh = ns.network.PacketSinkHelper("ns3::TcpSocketFactory", ns.network.InetSocketAddress(ns.network.Ipv4Address.GetAny(), 5000).ConvertTo())
+    # d1psh.SetAttribute("Protocol", ns.core.TypeIdValue(ns.network.TcpCubic.GetTypeId()))
     d1sa = d1psh.Install(dNodes.Get(0))
     d1sa.Start(ns.core.Seconds(0.0))
     d1sa.Stop(ns.core.Seconds(10.0))
 
-    # Destination 2
-    d2psh = ns.network.PacketSinkHelper("ns3::TcpSocketFactory", ns.network.InetSocketAddress(ips2r1.GetAddress(0), 5000).ConvertTo())
-    d2sa = d2psh.Install(dNodes.Get(1))
-    d2sa.Start(ns.core.Seconds(0.0))
-    d2sa.Stop(ns.core.Seconds(10.0))
+    # # Destination 2
+    # d2psh = ns.network.PacketSinkHelper("ns3::TcpSocketFactory", ns.network.InetSocketAddress(ns.network.Ipv4Address.GetAny(), 5001).ConvertTo())
+    # d2sa = d2psh.Install(dNodes.Get(1))
+    # d2sa.Start(ns.core.Seconds(0.0))
+    # d2sa.Stop(ns.core.Seconds(10.0))
 
     print("Run Simulator")
     ns.core.Simulator.Stop(ns.core.Seconds(10.0))
@@ -76,5 +75,5 @@ if __name__ == "__main__":
     ns.core.Simulator.Destroy()
     print("Done")
     d1eps = bind_object(addressof(d1sa), ns.network.PacketSink)
-    d2eps = bind_object(addressof(d2sa), ns.network.PacketSink)
-    print(d1eps.GetTotalRx(), d2eps.GetTotalRx())
+    # d2eps = bind_object(addressof(d2sa), ns.network.PacketSink)
+    print(d1eps.GetTotalRx(), d1eps.GetTotalRx())
