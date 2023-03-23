@@ -1,8 +1,8 @@
 from ns import ns
 from cppyy import addressof, bind_object
 
-if __name__ == "__main__":
-    ns.core.Config.SetDefault("ns3::TcpL4Protocol::SocketType", ns.core.TypeIdValue(ns.network.TcpCubic.GetTypeId()))
+def simulate(protocol, end_time, max_bytes):
+    ns.core.Config.SetDefault("ns3::TcpL4Protocol::SocketType", protocol)
     # Sender Nodes
     sNodes = ns.network.NodeContainer()
     sNodes.Create(2)
@@ -41,39 +41,67 @@ if __name__ == "__main__":
 
     # Create routing tables
     ns.network.Ipv4GlobalRoutingHelper.PopulateRoutingTables()
+    
+    # Set up flow monitor helper and install on all nodes
+    fm = ns.network.FlowMonitorHelper()
+    fm.InstallAll()
+    monitor = fm.GetMonitor()
+    monitor.Start(ns.core.Seconds(0.0))
+    monitor.Stop(ns.core.Seconds(end_time))
+    
 
     # Sender 1
     s1bsh = ns.network.BulkSendHelper("ns3::TcpSocketFactory", ns.network.InetSocketAddress(ips1r1.GetAddress(0), 5000).ConvertTo())
-    s1bsh.SetAttribute("MaxBytes", ns.core.UintegerValue(1000))
+    s1bsh.SetAttribute("MaxBytes", ns.core.UintegerValue(max_bytes))
     s1sa = s1bsh.Install(sNodes.Get(0))
-    s1sa.Start(ns.core.Seconds(0.0))
-    s1sa.Stop(ns.core.Seconds(10.0))
+    s1sa.Start(ns.core.Seconds(5.0))
+    s1sa.Stop(ns.core.Seconds(end_time))
 
     # # Sender 2
     # s2bsh = ns.network.BulkSendHelper("ns3::TcpSocketFactory", ns.network.InetSocketAddress(ips2r1.GetAddress(0), 5001).ConvertTo())
-    # s2bsh.SetAttribute("MaxBytes", ns.core.UintegerValue(1))
+    # s2bsh.SetAttribute("MaxBytes", ns.core.UintegerValue(max_bytes))
     # s2sa = s2bsh.Install(sNodes.Get(1))
     # s2sa.Start(ns.core.Seconds(0.0))
-    # s2sa.Stop(ns.core.Seconds(10.0))
+    # s2sa.Stop(ns.core.Seconds(end_time))
 
     # Destination 1
     d1psh = ns.network.PacketSinkHelper("ns3::TcpSocketFactory", ns.network.InetSocketAddress(ns.network.Ipv4Address.GetAny(), 5000).ConvertTo())
-    # d1psh.SetAttribute("Protocol", ns.core.TypeIdValue(ns.network.TcpCubic.GetTypeId()))
+    # d1psh.SetAttribute("Protocol", protocol)
     d1sa = d1psh.Install(dNodes.Get(0))
-    d1sa.Start(ns.core.Seconds(0.0))
-    d1sa.Stop(ns.core.Seconds(10.0))
+    d1sa.Start(ns.core.Seconds(5.0))
+    d1sa.Stop(ns.core.Seconds(end_time))
 
     # # Destination 2
     # d2psh = ns.network.PacketSinkHelper("ns3::TcpSocketFactory", ns.network.InetSocketAddress(ns.network.Ipv4Address.GetAny(), 5001).ConvertTo())
     # d2sa = d2psh.Install(dNodes.Get(1))
     # d2sa.Start(ns.core.Seconds(0.0))
-    # d2sa.Stop(ns.core.Seconds(10.0))
+    # d2sa.Stop(ns.core.Seconds(end_time))
 
     print("Run Simulator")
-    ns.core.Simulator.Stop(ns.core.Seconds(10.0))
+    ns.core.Simulator.Stop(ns.core.Seconds(end_time))
     ns.core.Simulator.Run()
     ns.core.Simulator.Destroy()
+    monitor.SerializeToXmlFile("xml_out.xml", False, False)
     print("Done")
     d1eps = bind_object(addressof(d1sa), ns.network.PacketSink)
     # d2eps = bind_object(addressof(d2sa), ns.network.PacketSink)
     print(d1eps.GetTotalRx(), d1eps.GetTotalRx())
+
+
+
+####################################
+####### ####### MAIN ####### #######
+####################################
+
+cubic = ns.core.TypeIdValue(ns.network.TcpCubic.GetTypeId())
+
+# this line might not be right --Drew
+dctcp = ns.core.TypeIdValue(ns.network.TcpDctcp.GetTypeId())
+
+end_times = 100000.0
+
+max_bytes = 100000
+
+if __name__ == "__main__":
+    simulate(dctcp, end_times, max_bytes)
+    
