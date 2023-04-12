@@ -1,0 +1,9 @@
+protocol,count
+ip,2224
+tcp,213
+udp,2011
+dns,48
+icmp,0
+http,39
+https,174
+quic,1961
